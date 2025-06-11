@@ -1,0 +1,77 @@
+{
+  "name": "admin-service",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^4.17.22",
+    "@types/jest": "^27.5.2",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^16.18.86",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18.2.61",
+    "@types/react-datepicker": "^6.0.1",
+    "@types/react-dom": "^18.2.19",
+    "@types/react-router-dom": "^5.3.3",
+    "@types/recharts": "^1.8.29",
+    "@types/uuid": "^10.0.0",
+    "axios": "^1.9.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.5.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "nodemailer": "^6.9.9",
+    "pg": "^8.11.3",
+    "react": "^18.2.0",
+    "react-datepicker": "^6.1.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.2",
+    "react-scripts": "5.0.1",
+    "recharts": "^2.12.1",
+    "reflect-metadata": "^0.2.2",
+    "styled-components": "^6.1.8",
+    "typeorm": "^0.3.20",
+    "typescript": "^4.9.5",
+    "uuid": "^11.1.0",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "server": "ts-node --project tsconfig.server.json src/server/index.ts",
+    "dev": "concurrently \"npm run server\" \"npm run start\"",
+    "init-db": "ts-node --project tsconfig.server.json src/database/init-db.ts"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "ts-node": "^10.9.2"
+  },
+  "proxy": "http://localhost:3001"
+}
