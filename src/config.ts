@@ -1,27 +1,67 @@
-export const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import dotenv from 'dotenv';
 
-// Другие конфигурационные параметры
-export const PORT = process.env.PORT || 3000;
-export const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:12345@localhost:5432/servis';
+dotenv.config();
 
-export const config = {
+interface ServerConfig {
+  port: number;
+  nodeEnv: string;
+  jwtSecret: string;
+  jwtExpiresIn: string;
+  clientUrl: string;
+}
+
+interface ClientConfig {
+  port: number;
+  url: string;
+}
+
+interface DatabaseConfig {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  database: string;
+}
+
+interface EmailConfig {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+}
+
+interface AppConfig {
+  server: ServerConfig;
+  client: ClientConfig;
+  database: DatabaseConfig;
+  email: EmailConfig;
+}
+
+export const config: AppConfig = {
   server: {
-    port: process.env.PORT || 3001,
-    jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
-    nodeEnv: process.env.NODE_ENV || 'development'
+    port: Number(process.env.PORT) || 3001,
+    nodeEnv: process.env.NODE_ENV || 'development',
+    jwtSecret: process.env.JWT_SECRET || 'your-secret-key-here',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
+    clientUrl: process.env.CLIENT_URL || 'http://localhost:3000'
   },
   client: {
-    port: process.env.CLIENT_PORT || 3000,
+    port: Number(process.env.CLIENT_PORT) || 3000,
     url: process.env.CLIENT_URL || 'http://localhost:3000'
   },
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres:12345@localhost:5432/servis'
+    host: process.env.DATABASE_HOST || 'localhost',
+    port: Number(process.env.DATABASE_PORT) || 5432,
+    username: process.env.DATABASE_USER || 'postgres',
+    password: process.env.DATABASE_PASSWORD || '12345',
+    database: process.env.DATABASE_NAME || 'servis'
   },
   email: {
-    user: process.env.EMAIL_USER || 'uulukmyrza27@gmail.com',
-    password: process.env.EMAIL_PASSWORD || 'bnju uqos uhry dans',
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === 'true' || false
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || ''
   }
 }; 
+
+export const JWT_SECRET = config.server.jwtSecret; 

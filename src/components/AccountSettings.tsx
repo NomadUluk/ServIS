@@ -103,8 +103,8 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({ onClose }) => {
         const response = await api.get<AdminProfileResponse>('/admin/profile');
         console.log('Profile data received:', response.data);
         const { fullName, username } = response.data;
-        setFormData(prev => ({
-          ...prev,
+    setFormData(prev => ({
+      ...prev,
           fullName,
           username
         }));

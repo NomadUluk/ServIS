@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.1.1",
+    "@mui/material": "^7.1.1",
+    "@prisma/client": "^4.16.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -13,13 +18,11 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^16.18.86",
     "@types/nodemailer": "^6.4.17",
-    "@types/react": "^18.2.61",
     "@types/react-datepicker": "^6.0.1",
-    "@types/react-dom": "^18.2.19",
     "@types/react-router-dom": "^5.3.3",
     "@types/recharts": "^1.8.29",
     "@types/uuid": "^10.0.0",
-    "axios": "^1.9.0",
+    "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -43,13 +46,18 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "set PORT=3000 && react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject",
-    "server": "ts-node --project tsconfig.server.json src/server/index.ts",
-    "dev": "concurrently \"npm run server\" \"npm run start\"",
-    "init-db": "ts-node --project tsconfig.server.json src/database/init-db.ts"
+    "server": "set PORT=3001 && ts-node --project tsconfig.server.json src/server/index.ts",
+    "server:dev": "set PORT=3001 && set NODE_ENV=development && ts-node --project tsconfig.server.json src/server/index.ts",
+    "dev": "concurrently \"npm run server:dev\" \"set PORT=3000 && npm run start\" \"npx prisma studio\"",
+    "init-db": "prisma db push && ts-node --project tsconfig.server.json src/database/init-db.ts",
+    "prisma:studio": "prisma studio",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:pull": "prisma db pull"
   },
   "eslintConfig": {
     "extends": [
@@ -70,8 +78,25 @@
     ]
   },
   "devDependencies": {
+    "@types/aria-query": "^5.0.4",
+    "@types/d3-array": "^3.2.1",
+    "@types/d3-shape": "^3.1.7",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "assert": "^2.1.0",
+    "buffer": "^6.0.3",
     "concurrently": "^8.2.2",
-    "ts-node": "^10.9.2"
-  },
-  "proxy": "http://localhost:3001"
+    "crypto-browserify": "^3.12.1",
+    "http-proxy-middleware": "^2.0.6",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "prisma": "^4.16.2",
+    "process": "^0.11.10",
+    "react-app-rewired": "^2.2.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "ts-node": "^10.9.2",
+    "url": "^0.11.4"
+  }
 }

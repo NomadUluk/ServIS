@@ -86,7 +86,7 @@ const MessageContainer = styled.div<{ $error?: boolean }>`
   margin: 1rem 0;
 `;
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:${process.env.PORT || 3001}/api`;
 
 const ResetPassword = () => {
   const { token } = useParams<{ token: string }>();

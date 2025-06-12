@@ -1,19 +1,28 @@
-import { Response, NextFunction } from 'express';
-import { AuthRequest } from './auth';
+import { Request, Response, NextFunction } from 'express';
 import { UserRole } from '../database/enums';
+
+interface AuthRequest extends Request {
+    user?: {
+        userId: string;
+        role: string;
+    };
+}
 
 export const checkRole = (allowedRoles: UserRole[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
-        if (!req.user) {
-            return res.status(401).json({ error: 'Требуется авторизация' });
-        }
+        try {
+            if (!req.user) {
+                return res.status(401).json({ message: 'Требуется авторизация' });
+            }
 
-        if (!allowedRoles.includes(req.user.role as UserRole)) {
-            return res.status(403).json({ 
-                error: 'У вас нет прав для выполнения этого действия' 
-            });
-        }
+            if (!allowedRoles.includes(req.user.role as UserRole)) {
+                return res.status(403).json({ message: 'Доступ запрещен' });
+            }
 
-        next();
+            next();
+        } catch (error) {
+            console.error('Role check error:', error);
+            res.status(500).json({ message: 'Ошибка при проверке прав доступа' });
+        }
     };
 }; 

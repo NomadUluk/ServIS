@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { config } from '../config';
 
 // Создаем экземпляр axios с базовым URL
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+  baseURL: '/api'  // Используем относительный путь для работы с прокси
 });
 
 // Добавляем перехватчик запросов
@@ -10,6 +11,9 @@ instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
+      if (!config.headers) {
+        config.headers = {};
+      }
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

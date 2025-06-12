@@ -1,4 +1,5 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { config } from '../config';
 import {
     User,
     Ingredient,
@@ -19,14 +20,14 @@ import {
 
 export const databaseConfig: DataSourceOptions = {
     type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres',
-    password: '12345',
-    database: 'servis',
-    synchronize: true,
+    host: config.database.host,
+    port: config.database.port,
+    username: config.database.username,
+    password: config.database.password,
+    database: config.database.database,
+    synchronize: config.server.nodeEnv === 'development',
     dropSchema: false,
-    logging: true,
+    logging: config.server.nodeEnv === 'development',
     entities: [
         User,
         Ingredient,

@@ -1,6 +1,5 @@
 import React, { useState, FormEvent } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { useNavigate } from 'react-router-dom';
 import api from '../utils/axios';
 
 const shakeAnimation = keyframes`
@@ -45,13 +44,6 @@ const Form = styled.form`
 const InputGroup = styled.div`
   position: relative;
   width: 100%;
-`;
-
-const InputLabel = styled.label`
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #2D1B69;
-  font-weight: 500;
 `;
 
 const Input = styled.input`
@@ -136,8 +128,6 @@ const PasswordToggle = styled.button`
   }
 `;
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -149,7 +139,6 @@ const LoginPage = () => {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
-  const navigate = useNavigate();
 
   const EyeIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -206,33 +195,15 @@ const LoginPage = () => {
     setIsError(false);
 
     try {
-      const response = await fetch(`${API_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: restoreEmail }),
+      await api.post('/auth/forgot-password', {
+        email: restoreEmail
       });
-
-      let data;
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        throw new Error('Неверный формат ответа от сервера');
-      }
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Произошла ошибка при восстановлении пароля');
-      }
-
-      setMessage(data.message || 'Инструкции по восстановлению пароля отправлены на ваш email');
+      
+      setRestoreSent(true);
+      setMessage('Инструкции по восстановлению пароля отправлены на ваш email');
       setIsError(false);
-      if (response.ok) {
-        setRestoreSent(true);
-      }
-    } catch (error) {
-      console.error('Ошибка при восстановлении:', error);
-      setMessage(error instanceof Error ? error.message : 'Произошла ошибка при отправке запроса');
-      setIsError(true);
+    } catch (error: any) {
+      handleError(error.response?.data?.message || 'Произошла ошибка при отправке запроса на восстановление пароля');
     } finally {
       setIsLoading(false);
     }

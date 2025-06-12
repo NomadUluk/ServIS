@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(uuid())
+  fullName          String
+  username          String              @unique
+  passwordHash      String
+  role              UserRole
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  deliveries        Delivery[]
+  categories        MenuCategory[]
+  menuItems         MenuItem[]
+  paidOrders        Order[]             @relation("PaidBy")
+  createdOrders     Order[]             @relation("CreatedBy")
+  payments          Payment[]
+  managedShifts     Shift[]             @relation("ManagedBy")
+  shifts            ShiftStaff[]
+  writeOffs         WriteOff[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Ingredient {
+  id           Int                  @id @default(autoincrement())
+  name         String
+  unit         String
+  currentPrice Decimal
+  inStock      Decimal
+  createdAt    DateTime             @default(now())
+  deliveries   Delivery[]
+  stopList     IngredientStopList[]
+  menuItems    MenuIngredient[]
+  writeOffs    WriteOff[]
+}
+
+model Supplier {
+  id         Int        @id @default(autoincrement())
+  name       String
+  phone      String?
+  deliveries Delivery[]
+}
+
+model Delivery {
+  id           Int        @id @default(autoincrement())
+  ingredientId Int
+  supplierId   Int
+  quantity     Decimal
+  pricePerUnit Decimal
+  deliveryDate DateTime
+  createdById  String
+  createdBy    User       @relation(fields: [createdById], references: [id])
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  supplier     Supplier   @relation(fields: [supplierId], references: [id])
+}
+
+model MenuItem {
+  id          Int              @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal
+  costPrice   Decimal
+  imageUrl    String?
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  createdById String
+  categoryId  Int?
+  ingredients MenuIngredient[]
+  category    MenuCategory?    @relation(fields: [categoryId], references: [id])
+  createdBy   User             @relation(fields: [createdById], references: [id])
+  stopList    MenuStopList[]
+  orderItems  OrderItem[]
+}
+
+model MenuIngredient {
+  id           Int        @id @default(autoincrement())
+  menuItemId   Int
+  ingredientId Int
+  quantity     Decimal
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  menuItem     MenuItem   @relation(fields: [menuItemId], references: [id])
+}
+
+model Shift {
+  id                 Int                  @id @default(autoincrement())
+  startedAt          DateTime
+  endedAt            DateTime?
+  isActive           Boolean              @default(true)
+  managerId          String
+  ingredientStopList IngredientStopList[]
+  menuStopList       MenuStopList[]
+  orders             Order[]
+  manager            User                 @relation("ManagedBy", fields: [managerId], references: [id])
+  staff              ShiftStaff[]
+  writeOffs          WriteOff[]
+}
+
+model ShiftStaff {
+  id      Int    @id @default(autoincrement())
+  shiftId Int
+  userId  String
+  shift   Shift  @relation(fields: [shiftId], references: [id])
+  user    User   @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  tableNumber String
+  status      OrderStatus @default(OPEN)
+  totalPrice  Decimal
+  createdAt   DateTime    @default(now())
+  paidAt      DateTime?
+  waiterId    String
+  cashierId   String?
+  shiftId     Int
+  cashier     User?       @relation("PaidBy", fields: [cashierId], references: [id])
+  shift       Shift       @relation(fields: [shiftId], references: [id])
+  waiter      User        @relation("CreatedBy", fields: [waiterId], references: [id])
+  items       OrderItem[]
+  payments    Payment[]
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  menuItemId Int
+  quantity   Int
+  price      Decimal
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
+}
+
+model MenuStopList {
+  id         Int      @id @default(autoincrement())
+  menuItemId Int
+  shiftId    Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  shift      Shift    @relation(fields: [shiftId], references: [id])
+}
+
+model IngredientStopList {
+  id           Int        @id @default(autoincrement())
+  ingredientId Int
+  shiftId      Int
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  shift        Shift      @relation(fields: [shiftId], references: [id])
+}
+
+model Payment {
+  id          Int         @id @default(autoincrement())
+  orderId     Int
+  amount      Decimal
+  paymentType PaymentType
+  paidById    String
+  paidAt      DateTime    @default(now())
+  order       Order       @relation(fields: [orderId], references: [id])
+  paidBy      User        @relation(fields: [paidById], references: [id])
+}
+
+model MenuCategory {
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String?
+  imageUrl    String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  createdById String
+  createdBy   User       @relation(fields: [createdById], references: [id])
+  menuItems   MenuItem[]
+}
+
+model WriteOff {
+  id           Int          @id @default(autoincrement())
+  ingredientId Int
+  quantity     Decimal
+  type         WriteOffType
+  date         DateTime     @default(now())
+  createdById  String
+  comment      String?
+  shiftId      Int
+  createdBy    User         @relation(fields: [createdById], references: [id])
+  ingredient   Ingredient   @relation(fields: [ingredientId], references: [id])
+  shift        Shift        @relation(fields: [shiftId], references: [id])
+}
+
+model settings {
+  id        String   @id
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  used      Boolean   @default(false)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+}
+
+enum UserRole {
+  MANAGER
+  ADMIN
+  CASHIER
+  WAITER
+}
+
+enum OrderStatus {
+  OPEN
+  PAID
+  CANCELLED
+}
+
+enum PaymentType {
+  CASH
+  CARD
+  QR
+  OTHER
+}
+
+enum WriteOffType {
+  SPOILAGE
+  USAGE
+  INVENTORY
+  OTHER
+}

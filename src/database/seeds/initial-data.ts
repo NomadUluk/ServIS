@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { DataSource } from 'typeorm';
-import { User } from '../entities/user.entity';
+import { User } from '../entities';
 import { UserRole } from '../enums';
 
 export async function seedInitialData(dataSource: DataSource) {

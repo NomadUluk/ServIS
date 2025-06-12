@@ -1,16 +1,10 @@
 import { Router } from 'express';
-import { DataSource, Not } from 'typeorm';
-import { User } from '../database/entities/user.entity';
-import { ShiftStaff } from '../database/entities/shift-staff.entity';
-import { Shift } from '../database/entities/shift.entity';
+import { PrismaClient } from '@prisma/client';
 import { UserRole } from '../database/enums';
 import bcrypt from 'bcryptjs';
 
-export const createStaffRouter = (dataSource: DataSource) => {
+export const createStaffRouter = (prisma: PrismaClient) => {
     const router = Router();
-    const userRepository = dataSource.getRepository(User);
-    const shiftStaffRepository = dataSource.getRepository(ShiftStaff);
-    const shiftRepository = dataSource.getRepository(Shift);
 
     // Получить список всех сотрудников с их текущим статусом смены
     router.get('/', async (req, res) => {
@@ -21,28 +15,35 @@ export const createStaffRouter = (dataSource: DataSource) => {
             tomorrow.setDate(tomorrow.getDate() + 1);
 
             // Получаем всех сотрудников, кроме администраторов
-            const users = await userRepository.find({
+            const users = await prisma.user.findMany({
                 where: {
-                    role: Not(UserRole.ADMIN),
+                    role: { not: UserRole.ADMIN },
                     isActive: true
                 },
-                order: {
-                    fullName: 'ASC'
+                orderBy: {
+                    fullName: 'asc'
                 }
             });
 
             // Получаем текущие смены
-            const currentShifts = await shiftStaffRepository
-                .createQueryBuilder('ss')
-                .leftJoinAndSelect('ss.shift', 'shift')
-                .leftJoinAndSelect('ss.user', 'user')
-                .where('shift.startTime >= :today', { today })
-                .andWhere('shift.startTime < :tomorrow', { tomorrow })
-                .getMany();
+            const currentShifts = await prisma.shiftStaff.findMany({
+                where: {
+                    shift: {
+                        startedAt: {
+                            gte: today,
+                            lt: tomorrow
+                        }
+                    }
+                },
+                include: {
+                    shift: true,
+                    user: true
+                }
+            });
 
             // Формируем ответ
             const staffList = users.map(user => {
-                const isOnShift = currentShifts.some(ss => ss.user.id === user.id);
+                const isOnShift = currentShifts.some(ss => ss.userId === user.id);
                 return {
                     id: user.id,
                     fullName: user.fullName,
@@ -66,7 +67,10 @@ export const createStaffRouter = (dataSource: DataSource) => {
             const { fullName, username, password, role } = req.body;
 
             // Проверяем, существует ли пользователь с таким email
-            const existingUser = await userRepository.findOne({ where: { username } });
+            const existingUser = await prisma.user.findUnique({
+                where: { username }
+            });
+
             if (existingUser) {
                 return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
             }
@@ -75,15 +79,15 @@ export const createStaffRouter = (dataSource: DataSource) => {
             const passwordHash = await bcrypt.hash(password, 12);
 
             // Создаем нового пользователя
-            const newUser = userRepository.create({
-                fullName,
-                username,
-                passwordHash,
-                role,
-                isActive: true
+            const newUser = await prisma.user.create({
+                data: {
+                    fullName,
+                    username,
+                    passwordHash,
+                    role,
+                    isActive: true
+                }
             });
-
-            await userRepository.save(newUser);
 
             res.status(201).json({
                 id: newUser.id,
@@ -105,35 +109,42 @@ export const createStaffRouter = (dataSource: DataSource) => {
             const { fullName, username, role } = req.body;
 
             // Проверяем существование пользователя
-            const user = await userRepository.findOne({ where: { id } });
+            const user = await prisma.user.findUnique({
+                where: { id }
+            });
+
             if (!user) {
                 return res.status(404).json({ message: 'Сотрудник не найден' });
             }
 
             // Проверяем, не занят ли email другим пользователем
-            const existingUser = await userRepository.findOne({ 
-                where: { 
+            const existingUser = await prisma.user.findFirst({
+                where: {
                     username,
-                    id: Not(id) 
-                } 
+                    id: { not: id }
+                }
             });
+
             if (existingUser) {
                 return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
             }
 
             // Обновляем данные
-            user.fullName = fullName;
-            user.username = username;
-            user.role = role;
-
-            await userRepository.save(user);
+            const updatedUser = await prisma.user.update({
+                where: { id },
+                data: {
+                    fullName,
+                    username,
+                    role
+                }
+            });
 
             res.json({
-                id: user.id,
-                fullName: user.fullName,
-                username: user.username,
-                role: user.role,
-                isActive: user.isActive
+                id: updatedUser.id,
+                fullName: updatedUser.fullName,
+                username: updatedUser.username,
+                role: updatedUser.role,
+                isActive: updatedUser.isActive
             });
         } catch (error) {
             console.error('Error updating employee:', error);
@@ -147,14 +158,19 @@ export const createStaffRouter = (dataSource: DataSource) => {
             const { id } = req.params;
 
             // Проверяем существование пользователя
-            const user = await userRepository.findOne({ where: { id } });
+            const user = await prisma.user.findUnique({
+                where: { id }
+            });
+
             if (!user) {
                 return res.status(404).json({ message: 'Сотрудник не найден' });
             }
 
             // Помечаем пользователя как неактивного вместо физического удаления
-            user.isActive = false;
-            await userRepository.save(user);
+            await prisma.user.update({
+                where: { id },
+                data: { isActive: false }
+            });
 
             res.status(204).send();
         } catch (error) {
